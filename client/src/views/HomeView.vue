@@ -22,6 +22,9 @@
         </button>
       </div>
     </div>
+    <div class="toast" v-if="showError">
+      {{ errorMessage }}
+    </div>
   </div>
 </template>
 
@@ -37,6 +40,8 @@ export default {
       messages: [],
       newMessage: '',
       isProcessing: false,
+      showError: false,
+      errorMessage: '',
     };
   },
   methods: {
@@ -60,7 +65,7 @@ export default {
           { role: 'assistant', content: '' },
         ],
       };
-
+      this.showError = false
       // Perform API call to your endpoint with the requestBody
       // Here's an example using the Fetch API
       fetch('http://localhost:3000/chat', {
@@ -83,6 +88,8 @@ export default {
         })
         .catch((error) => {
           console.error('Error:', error);
+          this.showError = true;
+          this.errorMessage = 'API call failed. Please try again.';
         })
         .finally(() => {
           this.isProcessing = false;
@@ -131,5 +138,17 @@ button {
   background-color: #007bff;
   color: #fff;
   cursor: pointer;
+}
+
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 16px;
+  background-color: #ff5249;
+  color: #fff;
+  border-radius: 4px;
+  z-index: 9999;
 }
 </style>
