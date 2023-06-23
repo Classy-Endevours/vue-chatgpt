@@ -5,8 +5,8 @@
         <ChatBubble
           v-for="message in messages"
           :key="message.id"
-          :message="message.text"
-          :isUserMessage="message.isUserMessage"
+          :message="message.content"
+          :isUserMessage="message.role === 'user'"
         />
       </div>
       <div class="input-container">
@@ -16,7 +16,10 @@
           placeholder="Type your message..."
           autofocus
         />
-        <button @click="sendMessage">Send</button>
+        <button @click="sendMessage" :disabled="isProcessing">
+          <span v-if="isProcessing">Loading...</span>
+          <span v-else>Send</span>
+        </button>
       </div>
     </div>
   </div>
@@ -33,6 +36,7 @@ export default {
     return {
       messages: [],
       newMessage: '',
+      isProcessing: false,
     };
   },
   methods: {
@@ -41,24 +45,48 @@ export default {
       if (messageText !== '') {
         this.messages.push({
           id: this.messages.length,
-          text: messageText,
-          isUserMessage: true,
+          content: messageText,
+          role: 'user',
         });
         this.newMessage = '';
+        this.isProcessing = true;
         this.replyWithGPT(messageText);
       }
     },
     replyWithGPT(messageText) {
-      // Perform API call or GPT processing to generate a reply
-      // For simplicity, we'll use a dummy response here
-      setTimeout(() => {
-        const replyText = `You said: "${messageText}". GPT-generated reply.`;
-        this.messages.push({
-          id: this.messages.length,
-          text: replyText,
-          isUserMessage: false,
+      const requestBody = {
+        messages: [
+          { role: 'user', content: messageText },
+          { role: 'assistant', content: '' },
+        ],
+      };
+
+      // Perform API call to your endpoint with the requestBody
+      // Here's an example using the Fetch API
+      fetch('http://localhost:3000/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          const replyText = data.messages.find(
+            (message) => message.role === 'assistant'
+          ).content;
+          this.messages.push({
+            id: this.messages.length,
+            content: replyText,
+            role: 'assistant',
+          });
+        })
+        .catch((error) => {
+          console.error('Error:', error);
+        })
+        .finally(() => {
+          this.isProcessing = false;
         });
-      }, 500);
     },
   },
 };
