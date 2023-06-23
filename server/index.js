@@ -5,6 +5,8 @@ const ChatGPT = require('./chatgpt');
 require('dotenv').config();
 
 const app = express();
+app.use(express.json())
+app.use(express.urlencoded())
 const PORT = process.env.PORT ?? 3000;
 app.use(cors())
 app.get('/', (req, res) => {
@@ -13,9 +15,12 @@ app.get('/', (req, res) => {
 
 app.post('/chat', async (req, res) => {
     try {
-        const sample = [{ role: "user", content: 'How are you feeling today?' }]
+        // return res.json({ message: 'thanks' })
+        const messages = req.body.messages.map((message) => {
+            return { role: message.role, content: message.content ?? '' }
+        })
         const chatGpt = new ChatGPT()
-        const output = await chatGpt.send(sample)
+        const output = await chatGpt.send(messages)
         res.json({ message: output })
     } catch (error) {
         res.status(500).send({ error })

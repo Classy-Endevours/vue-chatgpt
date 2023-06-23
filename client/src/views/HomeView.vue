@@ -58,16 +58,13 @@ export default {
         this.replyWithGPT(messageText);
       }
     },
-    replyWithGPT(messageText) {
+    replyWithGPT() {
       const requestBody = {
-        messages: [
-          { role: 'user', content: messageText },
-          { role: 'assistant', content: '' },
-        ],
+        messages: this.messages,
       };
-      this.showError = false
+      this.showError = false;
+
       // Perform API call to your endpoint with the requestBody
-      // Here's an example using the Fetch API
       fetch('http://localhost:3000/chat', {
         method: 'POST',
         headers: {
@@ -77,9 +74,7 @@ export default {
       })
         .then((response) => response.json())
         .then((data) => {
-          const replyText = data.messages.find(
-            (message) => message.role === 'assistant'
-          ).content;
+          const replyText = data.message;
           this.messages.push({
             id: this.messages.length,
             content: replyText,
