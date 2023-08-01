@@ -65,7 +65,7 @@ export default {
       this.showError = false;
 
       // Perform API call to your endpoint with the requestBody
-      fetch('http://localhost:3000/chat', {
+      fetch(`${import.meta.env.VITE_API_URL}/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
