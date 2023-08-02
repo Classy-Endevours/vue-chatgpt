@@ -71,7 +71,7 @@ export default {
       showError.value = false;
 
       // Perform API call to your endpoint with the requestBody
-      fetch(`${apiUrl}/chat`, {
+      fetch(`${import.meta.env.VITE_API_URL}/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
