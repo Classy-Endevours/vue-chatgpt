@@ -1,5 +1,9 @@
 <template>
   <div id="app">
+    <div class="input-container" v-if="!hasInitialPromptSet">
+      <input v-model="initialPrompt" placeholder="Set initial prompt" />
+      <button @click="setInitialPrompt">Set</button>
+    </div>
     <div class="chat-window">
       <div class="chat-log">
         <ChatBubble
@@ -29,43 +33,45 @@
 </template>
 
 <script>
+import { ref, onMounted } from 'vue';
 import ChatBubble from '../components/ChatBubble.vue';
 
 export default {
   components: {
     ChatBubble,
   },
-  data() {
-    return {
-      messages: [],
-      newMessage: '',
-      isProcessing: false,
-      showError: false,
-      errorMessage: '',
-    };
-  },
-  methods: {
-    sendMessage() {
-      const messageText = this.newMessage.trim();
+  setup() {
+    const messages = ref([]);
+    const newMessage = ref('');
+    const isProcessing = ref(false);
+    const showError = ref(false);
+    const errorMessage = ref('');
+    const apiUrl = 'http://localhost:3000'; // Update with your API URL
+    const initialPrompt = ref('');
+    const hasInitialPromptSet = ref(false);
+
+    const sendMessage = () => {
+      const messageText = newMessage.value.trim();
       if (messageText !== '') {
-        this.messages.push({
-          id: this.messages.length,
+        messages.value.push({
+          id: messages.value.length,
           content: messageText,
           role: 'user',
         });
-        this.newMessage = '';
-        this.isProcessing = true;
-        this.replyWithGPT(messageText);
+        newMessage.value = '';
+        isProcessing.value = true;
+        replyWithGPT(messageText);
       }
-    },
-    replyWithGPT() {
+    };
+
+    const replyWithGPT = (messageText) => {
       const requestBody = {
-        messages: this.messages,
+        messages: messages.value,
       };
-      this.showError = false;
+      showError.value = false;
 
       // Perform API call to your endpoint with the requestBody
-      fetch('http://localhost:3000/chat', {
+      fetch(`${apiUrl}/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -75,31 +81,65 @@ export default {
         .then((response) => response.json())
         .then((data) => {
           const replyText = data.message;
-          this.messages.push({
-            id: this.messages.length,
+          messages.value.push({
+            id: messages.value.length,
             content: replyText,
             role: 'assistant',
           });
         })
         .catch((error) => {
           console.error('Error:', error);
-          this.showError = true;
-          this.errorMessage = 'API call failed. Please try again.';
+          showError.value = true;
+          errorMessage.value = 'API call failed. Please try again.';
         })
         .finally(() => {
-          this.isProcessing = false;
+          isProcessing.value = false;
         });
-    },
+    };
+
+    const setInitialPrompt = () => {
+      if (initialPrompt.value !== '') {
+        messages.value.push({
+          id: messages.value.length,
+          content: initialPrompt.value,
+          role: 'assistant',
+        });
+        isProcessing.value = true;
+        replyWithGPT(initialPrompt.value);
+        hasInitialPromptSet.value = true;
+      }
+    };
+
+    onMounted(setInitialPrompt);
+
+    return {
+      messages,
+      newMessage,
+      isProcessing,
+      showError,
+      errorMessage,
+      initialPrompt,
+      hasInitialPromptSet,
+      sendMessage,
+      setInitialPrompt,
+    };
   },
 };
 </script>
 
-<style>
+<style scoped>
 #app {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100vh;
+}
+
+.input-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
+  margin-bottom: 20px;  
 }
 
 .chat-window {
@@ -116,6 +156,7 @@ export default {
 
 .input-container {
   display: flex;
+  justify-content: center;
 }
 
 input {

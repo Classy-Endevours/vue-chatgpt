@@ -5,10 +5,15 @@
 </template>
 
 <script>
+import { defineProps } from 'vue';
+
 export default {
   props: {
     message: String,
     isUserMessage: Boolean,
+  },
+  setup(props) {
+    return defineProps(props);
   },
 };
 </script>
